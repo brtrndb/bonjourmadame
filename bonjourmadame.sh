@@ -8,7 +8,7 @@
 BM_URL="http://www.bonjourmadame.fr/"
 
 DEFAULT_FOLDER="$HOME/Images/BM";
-DEFAULT_NAME=BM-`date +%F`.png;
+DEFAULT_NAME=BM-`date +%F`;
 CONNECTED=`ping -c 1 google.com > /dev/null 2>&1 && echo $?`;
 
 if [ "0" -eq "$CONNECTED" ] ; then
@@ -26,10 +26,11 @@ if [ "0" -eq "$CONNECTED" ] ; then
     mkdir -p $TARGET_FOLDER;
   fi
 
-  IMG_PATH=$TARGET_FOLDER/$IMG_NAME;
+  IMG_URL=`wget -O - -q $BM_URL | grep -Eo "(http[s]?://[0-9]+.media.tumblr.com/[0-9a-f]*/tumblr[^\"]+)" | head -n 1` ;
+  IMG_EXTENSION="${IMG_URL##*.}";
+  IMG_PATH=$TARGET_FOLDER/$IMG_NAME.$IMG_EXTENSION;
 
   if [ ! -f "$IMG_PATH" ]; then
-    IMG_URL=`wget -O - -q $BM_URL | grep -Eo "(http[s]?://[0-9]+.media.tumblr.com/[0-9a-f]*/tumblr[^\"]+)" | head -n 1` ;
     wget -nv $IMG_URL -O $IMG_PATH;
   else
     echo "File [$IMG_PATH] already exists.";
