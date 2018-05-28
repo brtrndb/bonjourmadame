@@ -13,7 +13,10 @@ $ git clone https://github.com/brtrndb/bonjourmadame.git
 ## Usage
 
 ```
-$ ./bonjourmadame.sh target name
+Usage: bonjourmadame.sh { -c | -i } [ target name ]
+-c, --cron:   Add a crontab entry every weekdays at 10:30AM.
+-i, --image:  Donwload the daily Madame.
+-h, --help:   Display usage.
 ```
 
 ### Parameters
