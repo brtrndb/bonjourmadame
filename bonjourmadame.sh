@@ -1,8 +1,8 @@
 #!/bin/bash
 # Bertrand B.
 
-BM_URL="http://www.bonjourmadame.fr"
-TARGET="$HOME/Images/BM";
+BASE_URL="http://www.bonjourmadame.fr"
+FOLDER="$HOME/Images/BM";
 NB_DL=0;
 CRON=false;
 DATE="";
@@ -17,7 +17,7 @@ usage() {
     echo "-h, --help:   Display usage.";
 }
 
-configure_bm() {
+bm_configure() {
   while [ "$#" -gt "0" ]; do
     case "$1" in
       -c | --cron)
@@ -37,7 +37,7 @@ configure_bm() {
         shift 2;
       ;;
       -f | --folder)
-        TARGET=$2;
+        FOLDER=$2;
         shift 2;
       ;;
       -h | --help)
@@ -52,18 +52,18 @@ configure_bm() {
   done
 }
 
-create_folder_if_needed() {
-  if [ "$TARGET" = "." ]; then
-    TARGET=`pwd`;
+bm_create_folder() {
+  if [ "$FOLDER" = "." ]; then
+    FOLDER=`pwd`;
   fi
 
-  if [ ! -d "$TARGET" ]; then
-    mkdir -vp $TARGET;
+  if [ ! -d "$FOLDER" ]; then
+    mkdir -vp $FOLDER;
   fi
 }
 
-dl() {
-  LS=`ls $TARGET/$2* 2> /dev/null`;
+bm_download() {
+  LS=`ls $FOLDER/$2* 2> /dev/null`;
   if [ -f "$LS" ]; then
     echo "File for $2 already exists.";
     return;
@@ -71,26 +71,26 @@ dl() {
 
   IMG_URL=`wget -O - -q $1 | grep -Eo "(http[s]?://[0-9]+.media.tumblr.com/[0-9a-f]*/tumblr[^\"]+)" | head -n 1` ;
   IMG_EXTENSION="${IMG_URL##*.}";
-  IMG_PATH=$TARGET/$2.$IMG_EXTENSION;
+  IMG_PATH=$FOLDER/$2.$IMG_EXTENSION;
   wget -nv $IMG_URL -O $IMG_PATH;
 }
 
-dl_by_date() {
-  TODAY=`date +%s`;
-  DD=`date -d $DATE +%s`;
+bm_download_by_date() {
   NAME=BM-$DATE;
-  URL=$BM_URL/page/`echo "($TODAY - $DD) / (24 * 3600)" | bc`;
+  TODAY=`date +%s`;
+  DATE=`date -d $DATE +%s`;
+  URL=$BASE_URL/page/`echo "($TODAY - $DATE) / (24 * 3600)" | bc`;
   echo -n "BM-0: ";
-  dl $URL $NAME;
+  bm_download $URL $NAME;
 }
 
-dl_all() {
+bm_download_all() {
   TODAY=`date +%F`;
   for i in `seq 0 $NB_DL`; do
     NAME=BM-`date --date="$TODAY - $i day" +%F`;
-    URL=$BM_URL/page/$i;
+    URL=$BASE_URL/page/$i;
     echo -n "BM-$i: ";
-    dl $URL $NAME;
+    bm_download $URL $NAME;
   done
 }
 
@@ -101,11 +101,11 @@ bm() {
     return;
   fi
 
-  create_folder_if_needed;
+  bm_create_folder;
   if [ -z "$DATE" ]; then
-    dl_all;
+    bm_download_all;
   else
-    dl_by_date;
+    bm_download_by_date;
   fi;
 }
 
@@ -122,7 +122,7 @@ bm_cron() {
 }
 
 run() {
-  configure_bm $*;
+  bm_configure $*;
   if [ "$CRON" = "true" ]; then
     bm_cron;
   else
