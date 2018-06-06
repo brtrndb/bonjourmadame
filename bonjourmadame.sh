@@ -12,7 +12,7 @@ usage() {
     echo "-c, --cron:   Add a crontab entry every weekdays at 10:30AM."
     echo "-t, --today:  Donwload today's Madame.";
     echo "-a, --all:    Donwload all Madames.";
-    echo "-d, --date:   Download Madam for a specific date.";
+    echo "-d, --date:   Download Madame for a specific date. Note: lowest date is 2015-11-30.";
     echo "-f, --folder: Target folder for pics.";
     echo "-h, --help:   Display usage.";
 }
