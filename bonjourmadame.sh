@@ -3,7 +3,7 @@
 
 BASE_URL="http://www.bonjourmadame.fr"
 FOLDER="$HOME/Images/BM";
-NB_DL=0;
+COUNT=0;
 CRON=false;
 DATE="";
 
@@ -25,11 +25,11 @@ bm_configure() {
         shift 1;
       ;;
       -t | --today)
-        NB_DL=0;
+        COUNT=0;
         shift 1;
       ;;
       -a | --all)
-        NB_DL=1000;
+        COUNT=1000;
         shift 1;
       ;;
       -d | --date)
@@ -86,7 +86,7 @@ bm_download_by_date() {
 
 bm_download_all() {
   TODAY=`date +%F`;
-  for i in `seq 0 $NB_DL`; do
+  for i in `seq 0 $COUNT`; do
     NAME=BM-`date --date="$TODAY - $i day" +%F`;
     URL=$BASE_URL/page/$i;
     echo -n "BM-$i: ";
