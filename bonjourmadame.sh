@@ -32,7 +32,7 @@ bm_configure() {
       -a | --all)
         TODAY=`date --date="$TODAY" +%s`;
         DATE_LOW=`date --date="$DATE_LOW" +%s`;
-        COUNT=`echo "(($TODAY - $DATE_LOW) / (24 * 3600)) + 1" | bc`;
+        COUNT=`echo "(($TODAY - $DATE_LOW) / (24 * 3600) + 1)" | bc`;
         shift 1;
       ;;
       -d | --date)
@@ -72,10 +72,14 @@ bm_download() {
     return;
   fi;
 
-  IMG_URL=`wget -O - -q $1 | grep -Eo "(http[s]?://[0-9]+.media.tumblr.com/[0-9a-f]*/tumblr[^\"]+)" | head -n 1` ;
+  PAGE=`wget -O - -q $1`;
+  IMG_URL=`echo $PAGE | grep -Eo "(http[s]?://[0-9]+.media.tumblr.com/[0-9a-f]*/tumblr[^\"]+)" | head -n 1` ;
+  IMG_LEGEND=`echo $PAGE | grep -Eo "((<p>){2}.*(<\/p>){2})" | awk -F'(<p><p>)|(</p></p>)' '{print $2}' | awk '{gsub("<[^>]*>", "")}1' | recode html..utf8`;
   IMG_EXTENSION="${IMG_URL##*.}";
   IMG_PATH=$FOLDER/$2.$IMG_EXTENSION;
-  wget -nv $IMG_URL -O $IMG_PATH;
+  echo -n "$2:";
+  wget -q $IMG_URL -O $IMG_PATH;
+  echo " $IMG_LEGEND";
 }
 
 bm_download_by_date() {
@@ -83,16 +87,14 @@ bm_download_by_date() {
   TODAY=`date +%s`;
   DATE=`date -d $DATE +%s`;
   URL=$BASE_URL/page/`echo "($TODAY - $DATE) / (24 * 3600)" | bc`;
-  echo -n "$NAME: ";
   bm_download $URL $NAME;
 }
 
 bm_download_all() {
   TODAY=`date +%F`;
-  for i in `seq 0 $COUNT`; do
-    NAME=BM-`date --date="$TODAY - $i day" +%F`;
+  for i in `seq 1 $COUNT`; do
+    NAME=BM-`date --date="$TODAY - $(( i - 1 )) day" +%F`;
     URL=$BASE_URL/page/$i;
-    echo -n "$NAME: ";
     bm_download $URL $NAME;
   done
 }
