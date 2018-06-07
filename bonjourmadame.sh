@@ -83,7 +83,7 @@ bm_download_by_date() {
   TODAY=`date +%s`;
   DATE=`date -d $DATE +%s`;
   URL=$BASE_URL/page/`echo "($TODAY - $DATE) / (24 * 3600)" | bc`;
-  echo -n "BM-0: ";
+  echo -n "$NAME: ";
   bm_download $URL $NAME;
 }
 
@@ -92,7 +92,7 @@ bm_download_all() {
   for i in `seq 0 $COUNT`; do
     NAME=BM-`date --date="$TODAY - $i day" +%F`;
     URL=$BASE_URL/page/$i;
-    echo -n "BM-$i: ";
+    echo -n "$NAME: ";
     bm_download $URL $NAME;
   done
 }
