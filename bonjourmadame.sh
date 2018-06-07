@@ -6,13 +6,14 @@ FOLDER="$HOME/Images/BM";
 COUNT=0;
 CRON=false;
 DATE="";
+DATE_LOW="2015-11-30";
 
 usage() {
     echo "Usage: $(basename "$0") { -c | -t | -a | -h } [ -d date ] [ -f folder ]";
     echo "-c, --cron:   Add a crontab entry every weekdays at 10:30AM."
     echo "-t, --today:  Donwload today's Madame.";
     echo "-a, --all:    Donwload all Madames.";
-    echo "-d, --date:   Download Madame for a specific date. Note: lowest date is 2015-11-30.";
+    echo "-d, --date:   Download Madame for a specific date. Note: lowest date is $DATE_LOW.";
     echo "-f, --folder: Target folder for pics.";
     echo "-h, --help:   Display usage.";
 }
@@ -29,7 +30,9 @@ bm_configure() {
         shift 1;
       ;;
       -a | --all)
-        COUNT=1000;
+        TODAY=`date --date="$TODAY" +%s`;
+        DATE_LOW=`date --date="$DATE_LOW" +%s`;
+        COUNT=`echo "(($TODAY - $DATE_LOW) / (24 * 3600)) + 1" | bc`;
         shift 1;
       ;;
       -d | --date)
