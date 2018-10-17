@@ -13,7 +13,7 @@ $ git clone https://github.com/brtrndb/bonjourmadame.git
 ## Usage
 
 ```sh
-$ bonjourmadame.sh -h
+$ ./bonjourmadame.sh -h
 Usage: bonjourmadame.sh { -c | -t | -a | -h } [ -d date ] [ -f folder ]
 -c, --cron:   Add a crontab entry every weekdays at 10:30AM.
 -t, --today:  Donwload today's Madame.
