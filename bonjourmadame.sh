@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 # Bertrand B.
 
 BASE_URL="http://www.bonjourmadame.fr"
