@@ -25,8 +25,8 @@ Usage: bonjourmadame.sh { -c | -t | -a | -h } [ -d date ] [ -f folder ]
 
 ### Parameters
 
-* `folder`: Folder to save pictures. Default folder is `$HOME/Images/BM`.
-* `date`: Specify date. Date format should be like `YYYY-MM-DD`.
+- `folder`: Folder to save pictures. Default folder is `$HOME/Images/BM`.
+- `date`: Specify date. Date format should be like `YYYY-MM-DD`.
 
 ## Description
 
@@ -35,3 +35,5 @@ Usage: bonjourmadame.sh { -c | -t | -a | -h } [ -d date ] [ -f folder ]
 The script requires the `recode` package to format HTML accentued characters into UTF8. Install it with `sudo apt-get install recode`.
 
 ## License
+
+See [LICENSE.md](./LICENSE.md)
