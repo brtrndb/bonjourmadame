@@ -36,4 +36,4 @@ The script requires the `recode` package to format HTML accentued characters int
 
 ## License
 
-See [LICENSE.md](./LICENSE.md)
+See [LICENSE.md](./LICENSE.md).
