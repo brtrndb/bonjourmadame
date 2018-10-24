@@ -1,46 +1,56 @@
 #!/bin/sh
 # Bertrand B.
 
-BASE_URL="http://www.bonjourmadame.fr"
-FOLDER="$HOME/Images/BM";
-COUNT=0;
-CRON=false;
-DATE="";
-DATE_LOW="2015-11-30";
+BASE_URL="http://www.bonjourmadame.fr";
+DATE_MIN="2015-12-01";
+PARAM_FOLDER="$HOME/Images/BM";
+PARAM_CRON=false;
+PARAM_DATE_START="`date +%F`";
+PARAM_DATE_END="`date +%F`";
 
 usage() {
-    echo "Usage: $(basename "$0") { -c | -t | -a | -h } [ -d date ] [ -f folder ]";
-    echo "-c, --cron:   Add a crontab entry every weekdays at 10:30AM."
-    echo "-t, --today:  Donwload today's Madame.";
-    echo "-a, --all:    Donwload all Madames.";
-    echo "-d, --date:   Download Madame for a specific date. Note: lowest date is $DATE_LOW.";
-    echo "-f, --folder: Target folder for pics.";
-    echo "-h, --help:   Display usage.";
+    echo "Usage: $(basename "$0") { -a | -t | -c | -h } [ -d date ] [ -f folder ]";
+    echo "-a, --all:      Donwload all Madames.";
+    echo "--start, --end: Start/end date.";
+    echo "-t, --today:    Download today's Madame. This is the default option.";
+    echo "-d, --date:     Download Madame for a specific date. Note: lowest date is $DATE_MIN.";
+    echo "-c, --cron:     Add a crontab entry every weekdays at 10:30AM."
+    echo "-f, --folder:   Target folder for photos.";
+    echo "-h, --help:     Display usage.";
 }
 
-bm_configure() {
+configure() {
   while [ "$#" -gt "0" ]; do
     case "$1" in
       -c | --cron)
-        CRON=true;
+        PARAM_CRON=true;
         shift 1;
       ;;
       -t | --today)
-        COUNT=0;
+        PARAM_DATE_START="`date +%F`";
+        PARAM_DATE_END="`date +%F`";
         shift 1;
       ;;
       -a | --all)
-        TODAY=`date --date="$TODAY" +%s`;
-        DATE_LOW=`date --date="$DATE_LOW" +%s`;
-        COUNT=`echo "(($TODAY - $DATE_LOW) / (24 * 3600) + 1)" | bc`;
+        PARAM_DATE_START="`date -d "$DATE_MIN" +%F`";
+        PARAM_DATE_END="`date +%F`";
         shift 1;
       ;;
+      --start)
+        PARAM_DATE_START=$2;
+        shift 2;
+      ;;
+      --end)
+        PARAM_DATE_END=$2;
+        shift 2;
+      ;;
       -d | --date)
-        DATE=$2;
+        PARAM_DATE_START=$2;
+        PARAM_DATE_END=$2;
         shift 2;
       ;;
       -f | --folder)
-        FOLDER=$2;
+        PARAM_FOLDER=$2;
         shift 2;
       ;;
       -h | --help)
@@ -55,48 +65,54 @@ bm_configure() {
   done
 }
 
-bm_create_folder() {
-  if [ "$FOLDER" = "." ]; then
-    FOLDER=`pwd`;
+mk_folder() {
+  if [ "$PARAM_FOLDER" = "." ]; then
+    PARAM_FOLDER=`pwd`;
   fi
 
-  if [ ! -d "$FOLDER" ]; then
-    mkdir -vp $FOLDER;
+  if [ ! -d "$PARAM_FOLDER" ]; then
+    mkdir -vp $PARAM_FOLDER;
   fi
 }
 
-bm_download() {
-  LS=`ls $FOLDER/$2* 2> /dev/null`;
+download_img() {
+  PAGE_URL=$1;
+  IMG_NAME=$2;
+
+  LS=`ls $PARAM_FOLDER/$IMG_NAME* 2> /dev/null`;
   if [ -f "$LS" ]; then
-    echo "File for $2 already exists.";
+    echo "File for $IMG_NAME already exists.";
     return;
   fi;
 
-  PAGE=`wget -O - -q $1`;
-  IMG_URL=`echo $PAGE | grep -Eo "(http[s]?://[0-9]+.media.tumblr.com/[0-9a-f]*/tumblr[^\"]+)" | head -n 1` ;
-  IMG_LEGEND=`echo $PAGE | grep -Eo "((<p>){2}.*(<\/p>){2})" | awk -F'(<p><p>)|(</p></p>)' '{print $2}' | awk '{gsub("<[^>]*>", "")}1' | recode html..utf8`;
+  PAGE_HTML=`wget -q $PAGE_URL -O -`;
+  IMG_URL=`echo $PAGE_HTML | grep -Eo "(http[s]?://[0-9]+.media.tumblr.com/[0-9a-f]*/tumblr[^\"]+)" | head -n 1` ;
+  IMG_LEGEND=`echo $PAGE_HTML | grep -Eo "((<p>){2}.*(<\/p>){2})" | awk -F'(<p><p>)|(</p></p>)' '{print $2}' | awk '{gsub("<[^>]*>", "")}1' | recode html..utf8`;
   IMG_EXTENSION="${IMG_URL##*.}";
-  IMG_PATH=$FOLDER/$2.$IMG_EXTENSION;
-  echo -n "$2:";
+  IMG_PATH=$PARAM_FOLDER/$IMG_NAME.$IMG_EXTENSION;
+  echo -n "$(basename $IMG_PATH):";
   wget -q $IMG_URL -O $IMG_PATH;
   echo " $IMG_LEGEND";
 }
 
-bm_download_by_date() {
-  NAME=BM-$DATE;
-  TODAY=`date +%s`;
-  DATE=`date -d $DATE +%s`;
-  URL=$BASE_URL/page/`echo "($TODAY - $DATE) / (24 * 3600)" | bc`;
-  bm_download $URL $NAME;
-}
+download_all() {
+  DATE_START_F=$1;
+  DATE_END_F=$2;
+  DATE_START_S=`date -d "$DATE_START_F" +%s`;
+  DATE_END_S=`date -d "$DATE_END_F" +%s`;
+  COUNT=`echo "$(( ($DATE_END_S - $DATE_START_S) / (24 * 3600) + 1 ))"`;
 
-bm_download_all() {
-  TODAY=`date +%F`;
-  for i in `seq 1 $COUNT`; do
-    NAME=BM-`date --date="$TODAY - $(( i - 1 )) day" +%F`;
-    URL=$BASE_URL/page/$i;
-    bm_download $URL $NAME;
+  echo "$(( COUNT + 1 )) Madame(s) will be downloaded.";
+  for i in `seq 0 $(( COUNT ))`; do
+    DATE_IMG_F=`date -d "$DATE_START_F + $(( i )) day" +%F`;
+    DATE_IMG_S=`date -d "$DATE_IMG_F" +%s`;
+    DATE_TODAY_S=`date +%s`;
+    PAGE_URL=$BASE_URL/page/$(( ($DATE_TODAY_S - $DATE_IMG_S) / (24 * 3600) + 1 ));
+    IMG_NAME=BM-$DATE_IMG_F;
+    echo -n "$(( i + 1 ))/$(( COUNT + 1 ))) "
+    download_img $PAGE_URL $IMG_NAME;
   done
+  echo "$(( COUNT + 1 )) Madame(s) were downloaded.";
 }
 
 bm() {
@@ -106,17 +122,13 @@ bm() {
     return;
   fi
 
-  bm_create_folder;
-  if [ -z "$DATE" ]; then
-    bm_download_all;
-  else
-    bm_download_by_date;
-  fi;
+  mk_folder;
+  download_all $PARAM_DATE_START $PARAM_DATE_END;
 }
 
-bm_cron() {
+setup_cron() {
   CRONTAB=`crontab -u $USER -l 2> /dev/null | grep -v "bonjourmadame.sh -d"`;
-  CONF="30 10 * * Mon-Fri $PWD/$0 -i"
+  CONF="30 10 * * Mon-Fri $PWD/$0 -t"
 
   if [ -z "$CRONTAB" ]; then
     echo -e "$CONF" | crontab -u $USER -;
@@ -127,9 +139,9 @@ bm_cron() {
 }
 
 run() {
-  bm_configure $*;
-  if [ "$CRON" = "true" ]; then
-    bm_cron;
+  configure $*;
+  if [ "$PARAM_CRON" = "true" ]; then
+    setup_cron;
   else
     bm;
   fi
