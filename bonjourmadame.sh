@@ -6,16 +6,16 @@ DATE_MIN="2015-12-01";
 PARAM_FOLDER="$HOME/Images/BM";
 PARAM_CRON=false;
 PARAM_DATE_START="`date +%F`";
-PARAM_DATE_END="`date +%F`";
+PARAM_DATE_END="$PARAM_DATE_START";
 
 usage() {
     echo "Usage: $(basename "$0") { -a | -t | -c | -h } [ -d date ] [ -f folder ]";
     echo "-a, --all:      Donwload all Madames.";
     echo "--start, --end: Start/end date.";
     echo "-t, --today:    Download today's Madame. This is the default option.";
-    echo "-d, --date:     Download Madame for a specific date. Note: lowest date is $DATE_MIN.";
+    echo "-d, --date:     Download Madame for a specific date (YYYY-MM-DD). Note: lowest date is $DATE_MIN.";
     echo "-c, --cron:     Add a crontab entry every weekdays at 10:30AM."
-    echo "-f, --folder:   Target folder for photos.";
+    echo "-f, --folder:   Target folder for photos. Default folder is $HOME/Images/BM.";
     echo "-h, --help:     Display usage.";
 }
 
@@ -28,7 +28,7 @@ configure() {
       ;;
       -t | --today)
         PARAM_DATE_START="`date +%F`";
-        PARAM_DATE_END="`date +%F`";
+        PARAM_DATE_END="$PARAM_DATE_START";
         shift 1;
       ;;
       -a | --all)
@@ -101,6 +101,10 @@ download_all() {
   DATE_START_S=`date -d "$DATE_START_F" +%s`;
   DATE_END_S=`date -d "$DATE_END_F" +%s`;
   COUNT=`echo "$(( ($DATE_END_S - $DATE_START_S) / (24 * 3600) + 1 ))"`;
+
+  if [ "$COUNT" = "1" ]; then
+    COUNT=0;
+  fi
 
   echo "$(( COUNT + 1 )) Madame(s) will be downloaded.";
   for i in `seq 0 $(( COUNT ))`; do
