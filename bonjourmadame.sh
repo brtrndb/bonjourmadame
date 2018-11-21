@@ -19,7 +19,7 @@ usage() {
     echo "-t, --today:    Download today's Madame. This is the default option.";
     echo "-d, --date:     Download Madame for a specific date (YYYY-MM-DD). Note: lowest date is $DATE_MIN.";
     echo "-c, --cron:     Add a crontab entry every weekdays at 10:30AM.";
-    echo "-f, --folder:   Target folder for photos. Default folder is $HOME/Images/BM.";
+    echo "-f, --folder:   Target folder for photos. Default folder is $PARAM_FOLDER.";
     echo "-h, --help:     Display usage.";
 }
 
