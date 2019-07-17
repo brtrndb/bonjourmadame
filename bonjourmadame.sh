@@ -6,6 +6,7 @@ PARAM_FOLDER="$HOME/Images/BM";
 PARAM_CRON=false;
 PARAM_DATE_START="`date +%F`";
 PARAM_DATE_END="$PARAM_DATE_START";
+PARAM_MODIFIED=false;
 
 URL_BM="http://www.bonjourmadame.fr";
 URL_PING="www.google.com";
@@ -20,6 +21,7 @@ usage() {
     echo "-d, --date:     Download Madame for a specific date (YYYY-MM-DD). Note: lowest date is $DATE_MIN.";
     echo "-c, --cron:     Add a crontab entry every weekdays at 10:30AM.";
     echo "-f, --folder:   Target folder for photos. Default folder is $PARAM_FOLDER.";
+    echo "-m, --modif:    Verify if a picture has changed since last download. Default: $PARAM_MODIFIED.";
     echo "-h, --help:     Display usage.";
 }
 
@@ -57,6 +59,10 @@ configure() {
 		PARAM_FOLDER=$2;
 		shift 2;
 		;;
+-m | --modif)
+PARAM_MODIFIED=true
+shift 1;
+;;
 	    -h | --help)
 		usage;
 		exit 0;
@@ -79,15 +85,9 @@ mk_folder() {
     fi
 }
 
-download_img() {
+wget_img() {
     PAGE_URL=$1;
     IMG_NAME=$2;
-
-    LS=`ls $PARAM_FOLDER/$IMG_NAME* 2> $NULL`;
-    if [ -f "$LS" ]; then
-	echo "File for $IMG_NAME already exists.";
-	return;
-    fi;
 
     PAGE_HTML=`wget -q $PAGE_URL -O -`;
     IMG_URL=`echo $PAGE_HTML | grep -Eo "(http[s]?://[0-9]+.media.tumblr.com/[0-9a-f]*/tumblr[^\"]+)" | head -n 1` ;
@@ -97,6 +97,28 @@ download_img() {
     echo -n "$(basename $IMG_PATH):";
     wget -q $IMG_URL -O $IMG_PATH;
     echo " $IMG_LEGEND";
+}
+
+download_img() {
+    PAGE_URL=$1;
+    IMG_NAME=$2;
+
+    FIND_EXISTING=`find $PARAM_FOLDER -regextype posix-egrep -regex ".*$IMG_NAME(-1)?\.(jpg|png)" -printf 0 -quit`;
+    echo "find $PARAM_FOLDER -regextype posix-egrep -regex \".*$IMG_NAME(-[0-9])?\.(jpg|png)\" -printf 0 -quit";
+    if [ "$FIND_EXISTING" = "0" ]; then
+      echo "File for $IMG_NAME already exists.";
+      if [ "$PARAM_MODIFIED" = "true" ]; then
+        echo "Looking for changes.";
+        LS=`ls $PARAM_FOLDER/$IMG_NAME* 2> $NULL | head -1`;
+        echo $LS;
+        MD5=`md5sum $LS | awk '{print $1}'`;
+        echo $MD5;
+      else
+        return;
+      fi
+    fi
+
+    wget_img $PAGE_URL $ IMG_NAME;
 }
 
 download_all() {
